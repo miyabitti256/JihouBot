@@ -138,9 +138,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
 async function getReminder() {
     jobs.forEach(job => job.stop());
     jobs.length = 0;
-
-    console.log(jobs);
-
+    
     let reminders: Reminder[] = [];
     try {
         if(existsSync("./json/reminders.json")) {
@@ -160,8 +158,6 @@ async function getReminder() {
             (sendChannel as TextChannel).send(content);
         });
         jobs.push(job);
-
-        console.log(jobs);
     });
 }
 
