@@ -1,8 +1,7 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { schedule } from 'node-cron';
 import { writeFileSync } from 'fs';
 import { tz } from 'moment-timezone';
-import type { CommandInteraction, TextChannel } from 'discord.js';
+import type { CommandInteraction } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setschedule')
@@ -15,19 +14,19 @@ export const data = new SlashCommandBuilder()
     .setRequired(false));
 export async function execute(interaction: CommandInteraction) {
   const time = interaction.options.data.find(opt => opt.name ==='time')?.value as string;
-  let content = interaction.options.data.find(opt => opt.name === 'content')?.value as string;
-  if (content === null) {
+  let content = interaction.options.data.find(opt => opt.name === 'content')?.value || "";
+  if (content === "") {
     content = `${time}をお知らせします。`;
   };
   const [hour, minute] = time.split(':');
 
-  const channel = interaction.client.channels.cache.get("") as TextChannel; // ここに時報メッセージを送信するチャンネルのIDを入力
-  schedule(`${minute} ${hour} * * *`, function () {
-    channel.send(content);
-  });
+  if(hour >= "24" || minute >= "60"){
+    await interaction.reply({ content: '不正な時間入力です。0 ~ 23時 または 0 ~ 59分の値を入力してください。 ', ephemeral: true });
+    return
+  }
 
   // リマインダーの保存
-  const reminders = require('json/reminders.json');
+  const reminders = require('../json/reminders.json');
   reminders.push({ time, content });
   reminders.sort((a: { time: string; }, b: { time: string; }) => {
     const timeA = tz(a.time, 'HH:mm', 'Asia/Tokyo');

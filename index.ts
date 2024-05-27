@@ -38,7 +38,8 @@ for (const file of commandFiles){
 client.once("ready", c => {
     console.log(`${c.user.tag} has logged in.`);
     updateStatus();
-    schedule(`${BotStartTime.getSeconds()} ${BotStartTime.getMinutes()} * * * *`, () => updateStatus())    
+    getReminder();
+    schedule(`${BotStartTime.getSeconds()} ${BotStartTime.getMinutes()} * * * *`, () => updateStatus());    
 });
 
 client.on("messageCreate", message => {
@@ -84,42 +85,11 @@ client.on("interactionCreate", async interaction => {
     }
 })
 
-//Loading and rescheduling of time signal time
-async function getReminder() {
-    if(jobs.length > 0){
-        jobs.forEach(job => {
-            job.stop();
-        });
-        jobs.length = 0;
-    }
-
-    let reminders: Reminder[] = [];
-    try {
-        if(existsSync("./json/reminders.json")) {
-            reminders = JSON.parse(readFileSync("reminders.json", "utf-8"));
-        }
-    } catch (e) {
-        console.error(e);
-    }
-    reminders.forEach(reminder => {
-        const { time, content } = reminder;
-        const [hour, minute] = time.split(":");
-        const sendChannel = client.channels.cache.get(""/* ここにチャンネルID */);
-
-        const job = schedule(`${minute} ${hour} * * *`, () => {
-            const currentTime = getCurrentTime();
-            logToConsoleAndFile(`${currentTime} Message sent to the channel concerned.`);
-            (sendChannel as TextChannel).send(content);
-        });
-        jobs.push(job);
-    })
-}
-
 client.on("voiceStateUpdate", (oldState, newState) => {
 
-    const guildId = "";  // 対象のサーバーのID
-    const voiceChannelId = "";  // 監視するボイスチャンネルのID
-    const textChannelId = "";    // チャットを送信するテキストチャンネルのID
+    const guildId = process.env.DISCORD_GUILD_ID as string;  // Server ID
+    const voiceChannelId = process.env.DISCORD_VOICE_CHANNEL_ID as string;  // ID of the channel to monitor
+    const textChannelId = process.env.DISCORD_TEXT_CHANNEL_ID as string;  // ID of the channel to send
     const currentTime = getCurrentTime();
     let timeout:any = null;
 
@@ -164,6 +134,36 @@ client.on("voiceStateUpdate", (oldState, newState) => {
     }
 });
 
+//Loading and rescheduling of time signal time
+async function getReminder() {
+    jobs.forEach(job => job.stop());
+    jobs.length = 0;
+
+    console.log(jobs);
+
+    let reminders: Reminder[] = [];
+    try {
+        if(existsSync("./json/reminders.json")) {
+            reminders = JSON.parse(readFileSync("json/reminders.json", "utf-8"));
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    reminders.forEach(reminder => {
+        const { time, content } = reminder;
+        const [hour, minute] = time.split(":");
+        const sendChannel = client.channels.cache.get(process.env.DISCORD_TEXT_CHANNEL_ID as string/* ID of the channel to send */);
+
+        const job = schedule(`${minute} ${hour} * * *`, () => {
+            const currentTime = getCurrentTime();
+            logToConsoleAndFile(`${currentTime} Message sent to the channel concerned.`);
+            (sendChannel as TextChannel).send(content);
+        });
+        jobs.push(job);
+
+        console.log(jobs);
+    });
+}
 
 //Function to get the current time
 function getCurrentTime(): string {

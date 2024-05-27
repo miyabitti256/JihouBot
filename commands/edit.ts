@@ -17,12 +17,18 @@ export const data = new SlashCommandBuilder()
     .setRequired(false));
 export async function execute(interaction: CommandInteraction) {
   const id = interaction.options.data.find(opt => opt.name === "id")?.value;
-  const time = interaction.options.data.find(opt => opt.name === "time")?.value;
-  let content = interaction.options.data.find(opt => opt.name === "content")?.value;
+  const time = interaction.options.data.find(opt => opt.name === "time")?.value as string;
+  let content = interaction.options.data.find(opt => opt.name === "content")?.value || "";
 
-  if (content === null) {
+  if (content === "") {
     content = `${time}をお知らせします。`;
   };
+
+  const [hour, minute] = time.split(':');
+  if(hour >= "24" || minute >= "60"){
+    await interaction.reply({ content: '不正な時間入力です。0 ~ 23時 または 0 ~ 59分の値を入力してください。 ', ephemeral: true });
+    return
+  }
 
   const reminders = require('json/reminders.json');
   const reminderIndex = reminders.findIndex((reminder: { id: any; }) => reminder.id === id);
