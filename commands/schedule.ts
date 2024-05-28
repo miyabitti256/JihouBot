@@ -21,7 +21,7 @@ export async function execute(interaction: CommandInteraction) {
   const [hour, minute] = time.split(':');
 
   if(hour >= "24" || minute >= "60"){
-    await interaction.reply({ content: '不正な時間入力です。0 ~ 23時 または 0 ~ 59分の値を入力してください。 ', ephemeral: true });
+    await interaction.reply({ content: '不正な時間入力です。00 ~ 23時 または 00 ~ 59分の値を入力してください。 ', ephemeral: true });
     return
   }
 
