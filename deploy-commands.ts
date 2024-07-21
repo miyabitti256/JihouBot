@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { REST, Routes, type APIApplicationCommand } from 'discord.js';
-import { readdirSync } from 'node:fs';
+import { readdirSync } from 'fs';
 
 dotenv.config({ path: '.env.local' });
 
